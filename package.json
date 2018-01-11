@@ -1,0 +1,37 @@
+{
+  "name": "nodejs-microsoft-graph-connect",
+  "version": "2.0.0",
+  "description": "Connecting to Microsoft Graph is the first step every Node.js app must take to start working with the Microsoft Graph API. This sample shows how to connect and call Microsoft Graph",
+  "private": true,
+  "scripts": {
+    "start": "nodemon ./bin/www",
+    "lint": "eslint .",
+    "test": "mocha ./tests/integrationTest.js --timeout 10000",
+    "automatedTest": "mocha ./tests/automatedTest.js --timeout 20000"
+  },
+  "keywords": [
+    "graph",
+    "microsoft",
+    "nodejs",
+    "unified"
+  ],
+  "author": "Vaibhav",
+  "dependencies": {
+    "body-parser": "~1.17.1",
+    "cookie-parser": "~1.4.3",
+    "ejs": "^2.5.7",
+    "express": "~4.15.2",
+    "express-session": "^1.15.2",
+    "morgan": "~1.8.1",
+    "nodemon": "^1.14.3",
+    "open": "0.0.5",
+    "passport": "^0.3.2",
+    "passport-azure-ad": "^3.0.5",
+    "serve-favicon": "~2.4.2",
+    "superagent": "^3.5.2",
+    "uuid": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^8.0.2"
+  }
+}
