@@ -69,9 +69,9 @@ function shareLink (req, res)  {
   graphHelper.getDriveFileList(accessToken, (err, file) => {
     if (err) { console.log({ err: err.message }) }
 
-    console.log('Copying file With ID: ' + file.value[1].id)
+    console.log('Copying file With ID: ' + file.value[0].id)
 
-    graphHelper.copyFileFromDrive(accessToken, file.value[1].id, (err, id) => {
+    graphHelper.copyFileFromDrive(accessToken, file.value[0].id, (err, id) => {
       console.log('Copied new file ID: ' + id)
 
       graphHelper.insertDataToExcel(accessToken, id, (err, data) => {
