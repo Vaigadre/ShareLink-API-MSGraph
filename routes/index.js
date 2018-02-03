@@ -25,18 +25,15 @@ const open = require ('open')
 // Get the home page.
 router.get('/', (req, res) => {
   // check if user is authenticated
-  if (!req.isAuthenticated()) {
-    res.render('login');
-  } else {
-    res.redirect('/disconnect')
-  }
+  res.render('login');
+   //res.redirect('/login');  
 });
 
 // Authentication request.
 router.get('/login',
   passport.authenticate('azuread-openidconnect', { failureRedirect: '/' }),
     (req, res) => {
-      res.redirect('/');
+      res.redirect('/token');  
     });
 
 // Authentication callback.
@@ -44,58 +41,109 @@ router.get('/login',
 router.get('/token',
   passport.authenticate('azuread-openidconnect', { failureRedirect: '/' }),
     (req, res) => {
-      graphHelper.getUserData(req.user.accessToken, (err, user) => {
-        if (!err) {
-          //  req.user.profile.displayName = user.body.displayName;
+
+      //res.setHeader("200", {'Content-Type': 'application/json'});
+      //shareLink(req, res);
+
+    graphHelper.getUserData(req.user.accessToken).then( (user) => {
+        console.log(user.body.displayName);
+    }).catch(err => {console.log(err)})
+
+         //  req.user.profile.displayName = user.body.displayName;
           //  req.user.profile.emails = [{ address: user.body.mail || user.body.userPrincipalName }];
           // renderSendMail(req, res);
-          shareLink (req, res)
+           shareLink (req, res);
+          // res.send('<p>Operation completed<p>');
+           
           // graphHelper.getDriveFileList(req.user.accessToken, (err, list) => {
           //   console.log(list)
           // })
-        } else {
-          renderError(err, res);
-        }
-    });
-  }
-)
+  //       } else {
+  //         renderError(err, res);
+  //         res.send('<p>Operation failed<p>');
+  //       }
+  //   });
+  // }*/
+ }); 
 
 function shareLink (req, res)  {
   const accessToken = req.user.accessToken;
    const user = {
-    display_name: req.user.profile.displayName
+    display_name: req.user.profile.displayName,
+    accessToken: req.user.accessToken
   }
 
-  graphHelper.getDriveFileList(accessToken, (err, file) => {
-    if (err) { console.log({ err: err.message }) }
+  console.log(req.query.session_state);
 
-    console.log('Copying file With ID: ' + file.value[0].id)
+  graphHelper.getDriveFileList(accessToken)
+   .then( file =>{
+     return graphHelper.copyFileFromDrive(accessToken, file.value[0].id);
+   }).then ( id => {
+     return graphHelper.insertDataToExcel(accessToken, id);
+   }).then ( (id) => {
+     console.log('Response after insertion in sheet: \n' + id);
+     return graphHelper.getSharingLink(accessToken, id);
+   }).then( shareLink => {
+    console.log('Copied file is available on URL: \n' + shareLink);
+    open(shareLink);    
+   }).catch( err => {
+    // console.log(err);
+   })
 
-    graphHelper.copyFileFromDrive(accessToken, file.value[0].id, (err, id) => {
-      console.log('Copied new file ID: ' + id)
+    // res.render('fileList', {
+    //   user: user,
+    //   link: 'www.google.com',
+    //   actionUrl: "https://INC-excel.officeapps.live.com/x/_layouts/xlviewerinternal.aspx?edit=1&ui=en%2DUS&rs=en%2DUS&WOPISrc=https%3A%2F%2Ftriconindia%2Dmy%2Esharepoint%2Ecom%2Fpersonal%2Fvaibhav%5Ftriconinfotech%5Fcom%2F%5Fvti%5Fbin%2Fwopi%2Eashx%2Ffiles%2F56d94e388221479780233e0f51609c63&activeCell=%27Sheet1%27%21A1&wdInitialSession=f9e9a9d9%2D7582%2D46e2%2Db740%2Dcf3fae4857f3&wdRldC=1&wdEnableRoaming=1&mscc=1&wdODB=1", 
+    //   accessToken: accessToken,
+    //   access_token_ttl: (new Date).getTime()
+    // })  
+//   res.send(user);
+};
 
-      graphHelper.insertDataToExcel(accessToken, id, (err, data) => {
-        if (err) { console.log({ err: err.message }) }
+  // console.log("action " + actionUrl);
 
-        console.log('Response after insertion in sheet: \n' + data)
+    // res.render('fileList', {
+    //   user: user,
+    //   link: 'www.google.com',
+    //   actionUrl: actionUrl, accessToken: accessToken
+    // })
+  
+  //  f9e9a9d9-7582-46e2-b740-cf3fae4857f3 
+   
 
-        graphHelper.getSharingLink(accessToken, id, (err, link) => {
+  // graphHelper.getDriveFileList(accessToken, (err, file) => {
+  //   if (err) { console.log({ err: err.message }) }
+
+  //   console.log('Copying file With ID: ' + file.value[1].id)
+
+  //   graphHelper.copyFileFromDrive(accessToken, file.value[1].id, (err, id) => {
+  //     console.log('Copied new file ID: ' + id)
+
+  //     graphHelper.insertDataToExcel(accessToken, id, (err, data) => {
+  //       if (err) { console.log({ err: err.message }) }
+
+  //       console.log('Response after insertion in sheet: \n' + data)
+
+  //       graphHelper.getSharingLink(accessToken, id, (err, shareLink) => {
            
-          if (err) { console.log({ err: err.message }) }
-          open(link)
-          console.log('Copied file is available on URL: \n' + link)
+  //         if (err) { console.log({ err: err.message }) }
+  //         open(shareLink)
+  //         console.log('Copied file is available on URL: \n' + shareLink)
 
           //res.redirect(link)
-          res.render('fileList', {
-            user: user,
-            link: link
-          })
+          // res.render('fileList', {
+          //   user: user,
+          //   link: shareLink, 
+          //   url: url
+          // })
 
-        })
-      })      
-    })
-  })
-}
+    //     })
+    //   })      
+    // })
+  //})
+
+
+
 
 
 router.get('/disconnect', (req, res) => {

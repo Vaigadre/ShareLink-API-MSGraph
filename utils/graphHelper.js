@@ -10,27 +10,30 @@ const request = require('superagent');
  * @param {string} accessToken The access token to send with the request.
  * @param {Function} callback
  */
-function getUserData(accessToken, callback) {
-  request
+function getUserData(accessToken) {
+  return new Promise( (resolve, reject) => {
+    request
     .get('https://graph.microsoft.com/v1.0/me')
     .set('Authorization', 'Bearer ' + accessToken)
     .end((err, res) => {
-      callback(err, res);
-    });
+      err? reject(err): resolve(res)    
+    })
+  })  
 }
 
 
 
 // Get file id in one drive
-function getDriveFileList(accessToken, callback) {
-
+function getDriveFileList(accessToken) {
+ return new Promise( (resolve, reject) => {
   request
-    .get('https://graph.microsoft.com/v1.0/me/drive/root:/template:/children')
-    .set('Authorization', 'Bearer' + accessToken)
-    .set('Content-Type', 'application/json')
-    .end((err, res) => {
-      callback(err, res.body)
-    })
+  .get('https://graph.microsoft.com/v1.0/me/drive/root:/template:/children')
+  .set('Authorization', 'Bearer' + accessToken)
+  .set('Content-Type', 'application/json')
+  .end((err, res) => {
+    err? reject(err): resolve(res.body);
+  })
+ })  
 }
 
 // let driveRef = {
@@ -41,54 +44,61 @@ function getDriveFileList(accessToken, callback) {
 //     }
 //  }
 
-function copyFileFromDrive(accessToken, fileId, callback) {
+function copyFileFromDrive(accessToken, fileId) {
+  return new Promise( (resolve, reject) => {
   request
-    .post('https://graph.microsoft.com/v1.0/me/drive/items/' + fileId  + '/copy')
+    .post('https://graph.microsoft.com/v1.0/me/drive/items/' + fileId + '/copy')
     .send({
       "name": "test_" + (new Date()).toLocaleString().replace(/[^a-zA-Z0-9]/g, "") + ".xlsx",
       "parentReference": {
         "driveId": "b!DaqL0VWpbUevXFrDOUQxDMVDOfO0DENGtgQL1ZSsmK1IR1FBK5k3Qp1pAt03h704"
       }
-   })
+    })
     .set('Authorization', 'Bearer ' + accessToken)
     .set('Content-type', 'application/json')
     .end((err, res) => {
-      if(err) {
-      console.log(err.error + "\n" +err.text ) 
-    }
+      if (err) {
+        console.log(err.error + "\n" + err.text)
+      }
       let link = res.headers.location,
         //callback (err, getFileId(accessToken, link))
-          id = link.slice(link.indexOf('items/') + 6, link.indexOf('?'))
-        //   console.log(res)
-         callback (err, id)
+        id = link.slice(link.indexOf('items/') + 6, link.indexOf('?'))
+      //   console.log(res)
+       err? reject(err): resolve(id)
     })
-}        
+  })
+}
 
-function getFileId (accessToken, link) {
+
+
+function getFileId(accessToken, link) {
   request
-   .get(link)
-   .set('Content-type', 'application/json')
-   .end((err, res) => {
-     if (!err) {
-       console.log(res)
-     }
-   })
+    .get(link)
+    .set('Content-type', 'application/json')
+    .end((err, res) => {
+      if (!err) {
+        console.log(res)
+      }
+    })
 }
 
 const data = {
   "values": [["id", "123456"]]
 }
 
-function insertDataToExcel(accessToken, fileId, callback) {
-  request
-   .patch("https://graph.microsoft.com/v1.0/me/drive/items/" +fileId+ "/workbook/worksheets('Sheet1')/range(address='A1:B1')")
-   .send(data)
-   .set('Authorization', 'Bearer ' + accessToken)
-   .set('Content-type', 'application/json')
-   .end((err, res) => {
-     let msg = "Address: " + res.body.address + " is inserted with values " + res.body.values[0] 
-     callback(err, msg)
-   })
+function insertDataToExcel(accessToken, fileId) {
+  return new Promise( (resolve, reject) => {
+    request
+    .patch("https://graph.microsoft.com/v1.0/me/drive/items/" + fileId + "/workbook/worksheets('Sheet1')/range(address='A1:B1')")
+    .send(data)
+    .set('Authorization', 'Bearer ' + accessToken)
+    .set('Content-type', 'application/json')
+    .end((err, res) => {
+      console.log("Address: " + res.body.address + " is inserted with values " + res.body.values[0]);
+      let id = res.body['@odata.id'].slice(res.body['@odata.id'].indexOf('items(') + 6, res.body['@odata.id'].indexOf(')'));
+      err? reject(err): resolve(id)
+    })
+  })  
 }
 
 /**
@@ -98,20 +108,22 @@ function insertDataToExcel(accessToken, fileId, callback) {
  * @param {Function} callback
 //  */
 // See https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/item_createlink
-function getSharingLink(accessToken, id, callback) {
-  request
+function getSharingLink(accessToken, id) {
+  return new Promise( (resolve, reject) => {
+    request
     .post('https://graph.microsoft.com/v1.0/me/drive/items/' + id + '/createLink')
-    .send({ type: 'view' })
+    .send({ type: 'embed' })
     .set('Authorization', 'Bearer ' + accessToken)
     .set('Content-Type', 'application/json')
     .end((err, res) => {
       // Returns 200 OK and the permission with the link in the body.
-      callback(err, res.body.link.webUrl);
-    });
+      err? reject(err): resolve(res.body.link.webUrl);
+    })
+  })  
 }
 
 
-
+//exports.getDiscoveryXml = getDiscoveryXml;
 exports.getUserData = getUserData;
 //exports.getProfilePhoto = getProfilePhoto;
 //exports.uploadFile = uploadFile;
@@ -120,6 +132,11 @@ exports.getSharingLink = getSharingLink;
 exports.getDriveFileList = getDriveFileList;
 exports.copyFileFromDrive = copyFileFromDrive;
 exports.insertDataToExcel = insertDataToExcel;
+
+
+
+
+
 
 
 
