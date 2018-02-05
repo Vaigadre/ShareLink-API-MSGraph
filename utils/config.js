@@ -5,7 +5,7 @@
 
 module.exports = {
   creds: {
-    redirectUrl: 'http://localhost:4000/token',
+    redirectUrl: 'http://localhost:4000/question/launch',
     clientID: '613b8f1d-fc68-4795-a2a5-2b558b7cb442',
     clientSecret: 'dLpbkQtSBqIB0PWk+yhEfIJ3ciW2bZIy0SRoFK7B4Ls=',
     identityMetadata: 'https://login.microsoftonline.com/triconinfotech.com/v2.0/.well-known/openid-configuration',

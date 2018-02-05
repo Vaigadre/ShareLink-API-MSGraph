@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license.
  * See LICENSE in the project root for license information.
@@ -17,10 +18,15 @@ const router = express.Router();
 const graphHelper = require('../utils/graphHelper.js');
 const emailer = require('../utils/emailer.js');
 const passport = require('passport');
-
+const request = require('superagent');
 const open = require ('open')
 // ////const fs = require('fs');
 // ////const path = require('path');
+
+var promiseToken = {
+  resolve: null,
+  reject: null
+};
 
 // Get the home page.
 router.get('/', (req, res) => {
@@ -33,15 +39,14 @@ router.get('/', (req, res) => {
 });
 
 // Authentication request.
-router.get('/login',
-  passport.authenticate('azuread-openidconnect', { failureRedirect: '/' }),
-    (req, res) => {
-      res.redirect('/');
+router.get('/login',  passport.authenticate('azuread-openidconnect'),
+    (req, res, next) => {
+      next();
     });
 
 // Authentication callback.
 // After we have an access token, get user data and load the sendMail page.
-router.get('/token',
+/* router.get('/token',
   passport.authenticate('azuread-openidconnect', { failureRedirect: '/' }),
     (req, res) => {
       graphHelper.getUserData(req.user.accessToken, (err, user) => {
@@ -59,43 +64,119 @@ router.get('/token',
     });
   }
 )
+*/
 
-function shareLink (req, res)  {
-  const accessToken = req.user.accessToken;
-   const user = {
-    display_name: req.user.profile.displayName
-  }
 
-  graphHelper.getDriveFileList(accessToken, (err, file) => {
-    if (err) { console.log({ err: err.message }) }
 
-    console.log('Copying file With ID: ' + file.value[0].id)
-
-    graphHelper.copyFileFromDrive(accessToken, file.value[0].id, (err, id) => {
-      console.log('Copied new file ID: ' + id)
-
-      graphHelper.insertDataToExcel(accessToken, id, (err, data) => {
-        if (err) { console.log({ err: err.message }) }
-
-        console.log('Response after insertion in sheet: \n' + data)
-
-        graphHelper.getSharingLink(accessToken, id, (err, link) => {
-           
+router.get('/token',
+  passport.authenticate('azuread-openidconnect'),
+    (req, res, next) => {
+     accessToken = req.user.accessToken; user = req.user.profile.displayName;
+    // promiseToken.resolve(accessToken);
+     console.log('Inside token ..');
+     //promiseToken.reject(new Error('Random'));
+     //res.json({"access_token" :accessToken });
+   //  res.redirect('/question/launch');
+      /*  graphHelper.getDriveFileList(accessToken, (err, file) => {
           if (err) { console.log({ err: err.message }) }
-          open(link)
-          console.log('Copied file is available on URL: \n' + link)
-
-          //res.redirect(link)
-          res.render('fileList', {
-            user: user,
-            link: link
+      
+          console.log('Copying file With ID: ' + file.value[0].id)
+      
+          graphHelper.copyFileFromDrive(accessToken, file.value[0].id, (err, id) => {
+            console.log('Copied new file ID: ' + id)
+      
+            graphHelper.insertDataToExcel(accessToken, id, (err, data) => {
+              if (err) { console.log({ err: err.message }) }
+      
+              console.log('Response after insertion in sheet: \n' + data)
+      
+              graphHelper.getSharingLink(accessToken, id, (err, link) => {
+                 
+                if (err) { console.log({ err: err.message }) }
+                open(link)
+                console.log('Copied file is available on URL: \n' + link)
+      
+                //res.redirect(link)
+                res.render('fileList', {
+                  user: user,
+                  link: link
+                })
+      
+              })
+            })      
           })
-
         })
-      })      
+     // next();    
+      */
     })
-  })
-}
+
+
+
+router.get('/question/launch', passport.authenticate('azuread-openidconnect', { failureRedirect: '/' }),
+(req, res) => {
+
+    const accessToken = req.user.accessToken; // user = req.user.profile.displayName;
+   // console.log("Access token is generated in question route: "+ accessToken);
+  
+
+    graphHelper.getDriveFileList(accessToken, (err, file) => {
+      if (err) { console.log({ err: err.message }) }
+  
+      console.log('Copying file With ID: ' + file.value[0].id)
+  
+      graphHelper.copyFileFromDrive(accessToken, file.value[0].id, (err, id) => {
+        console.log('Copied new file ID: ' + id)
+  
+        graphHelper.insertDataToExcel(accessToken, id, (err, data) => {
+          if (err) { console.log({ err: err.message }) }
+  
+          console.log('Response after insertion in sheet: \n' + data)
+  
+          graphHelper.getSharingLink(accessToken, id, (err, link) => {
+             
+            if (err) { console.log({ err: err.message }) }
+           // open(link)
+            
+            console.log('Copied file is available on URL: \n' + link)
+  
+            res.redirect(link)
+           // res.json({"shareUrl": link});
+  
+          })
+        })      
+      })
+    })
+  } 
+)
+
+router.get('/question/launchurl', passport.authenticate('azuread-openidconnect'),
+(req, res, next) => {
+  //let id = req.body.id, mode= req.body.mode, questionType=req.body.questionType;
+  //console.log("body", req.body);
+  console.log(res);
+  var promise  =new Promise((resolve, reject) => {
+    promiseToken.resolve = resolve;
+    promiseToken.reject = reject;
+   console.log("resolve: "+ promiseToken.resolve + "reject: " + promiseToken.reject);
+   // res.redirect('/login');
+    request
+    .get('http://localhost:4000/token?_t=' + new Date().getTime())
+    .end((err, response)=> {
+      console.log('logging in.');
+      //res.redirect('/');
+    })
+  });
+
+  promise.then((accessToken) => {
+    console.log('accessToken', accessToken);
+  }).catch((error) => {
+    console.error('Error in launchUrl', error);
+  });
+
+});
+
+
+
 
 
 router.get('/disconnect', (req, res) => {

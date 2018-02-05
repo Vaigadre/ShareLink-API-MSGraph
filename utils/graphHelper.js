@@ -86,7 +86,7 @@ function insertDataToExcel(accessToken, fileId, callback) {
    .set('Authorization', 'Bearer ' + accessToken)
    .set('Content-type', 'application/json')
    .end((err, res) => {
-     let msg = "Address: " + res.body.address + " is inserted with values " + res.body.values[0] 
+     let msg = "Address: " + res.body.address + " is inserted with values " ;//
      callback(err, msg)
    })
 }
