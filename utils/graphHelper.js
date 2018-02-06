@@ -75,18 +75,19 @@ function getFileId (accessToken, link) {
    })
 }
 
-const data = {
-  "values": [["id", "123456"]]
-}
+// const data = {
+//   "values": [["id", "123456"]]
+// }
 
-function insertDataToExcel(accessToken, fileId, callback) {
+function insertDataToExcel(accessToken, fileId, data,  callback) {
   request
    .patch("https://graph.microsoft.com/v1.0/me/drive/items/" +fileId+ "/workbook/worksheets('Sheet1')/range(address='A1:B1')")
    .send(data)
    .set('Authorization', 'Bearer ' + accessToken)
    .set('Content-type', 'application/json')
    .end((err, res) => {
-     let msg = "Address: " + res.body.address + " is inserted with values " + res.body.values[0] 
+    // console.log(res.body);
+     let msg = "Address: " + res.body.address + " is inserted with values " ;//+ res.body.values[0] 
      callback(err, msg)
    })
 }
