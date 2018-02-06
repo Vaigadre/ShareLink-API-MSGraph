@@ -87,6 +87,7 @@ app.use('/', routes);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   const err = new Error('Not Found');
+  //console.log(err);
   res.status(404);
   next(err);
 });
@@ -102,6 +103,14 @@ if (app.get('env') === 'development') {
     });
   });
 }
+
+app.get('/login', passport.authenticate('azuread-openidconnect',{ failureRedirect:'/'}),
+(req, res, next) => {
+//  const accessToken = req.user.accessToken; // user = req.user.profile.displayName;
+   console.log("Access token is generated in login route: "+ req.user);
+   console.log(app.get('accessToken'));
+});
+
 
 // production error handler
 // no stacktraces leaked to user

@@ -49,7 +49,8 @@ router.get('/token',
           //  req.user.profile.displayName = user.body.displayName;
           //  req.user.profile.emails = [{ address: user.body.mail || user.body.userPrincipalName }];
           // renderSendMail(req, res);
-          shareLink (req, res)
+          res.redirect('https://172.16.21.215:3001/view/index.html?access_token='+ req.user.accessToken);
+          //shareLink (req, res)
           // graphHelper.getDriveFileList(req.user.accessToken, (err, list) => {
           //   console.log(list)
           // })
@@ -60,21 +61,24 @@ router.get('/token',
   }
 )
 
-function shareLink (req, res)  {
-  const accessToken = req.user.accessToken;
-   const user = {
-    display_name: req.user.profile.displayName
-  }
+router.post('/question/launch', (req, res) => {
+  console.log(req.body);
+  var accessToken = req.body.accessToken, questionId=req.body.questionId, mode=req.body.mode;
 
+  var data = {
+     "values": [["id", questionId]]
+   }
+   console.log(data);
+   
   graphHelper.getDriveFileList(accessToken, (err, file) => {
     if (err) { console.log({ err: err.message }) }
-
+   //console.log(JSON.stringify(file));
     console.log('Copying file With ID: ' + file.value[0].id)
 
     graphHelper.copyFileFromDrive(accessToken, file.value[0].id, (err, id) => {
       console.log('Copied new file ID: ' + id)
 
-      graphHelper.insertDataToExcel(accessToken, id, (err, data) => {
+      graphHelper.insertDataToExcel(accessToken, id, data, (err, data) => {
         if (err) { console.log({ err: err.message }) }
 
         console.log('Response after insertion in sheet: \n' + data)
@@ -82,20 +86,20 @@ function shareLink (req, res)  {
         graphHelper.getSharingLink(accessToken, id, (err, link) => {
            
           if (err) { console.log({ err: err.message }) }
-          open(link)
+         // open(link)
           console.log('Copied file is available on URL: \n' + link)
 
-          //res.redirect(link)
-          res.render('fileList', {
-            user: user,
-            link: link
-          })
+          res.json({shareUrl: link});
+          // res.render('fileList', {
+          //   user: user,
+          //   link: link
+          // })
 
         })
       })      
     })
   })
-}
+});
 
 
 router.get('/disconnect', (req, res) => {
