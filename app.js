@@ -33,7 +33,8 @@ const app = express();
 
 // authentication setup
 const callback = (iss, sub, profile, accessToken, refreshToken, done) => {
-  console.log(accessToken)
+  console.log(accessToken);
+ 
   done(null, {
     profile,
     accessToken,
@@ -103,6 +104,14 @@ if (app.get('env') === 'development') {
     });
   });
 }
+
+app.get('/login', passport.authenticate('azuread-openidconnect',{ failureRedirect:'/'}),
+(req, res, next) => {
+//  const accessToken = req.user.accessToken; // user = req.user.profile.displayName;
+   console.log("Access token is generated in login route: "+ req.user);
+   console.log(app.get('accessToken'));
+});
+
 
 // production error handler
 // no stacktraces leaked to user

@@ -86,7 +86,7 @@ function insertDataToExcel(accessToken, fileId, callback) {
    .set('Authorization', 'Bearer ' + accessToken)
    .set('Content-type', 'application/json')
    .end((err, res) => {
-     let msg = "Address: " + res.body.address + " is inserted with values " ;//
+     let msg = "Address: " + res.body.address + " is inserted with values " ;
      callback(err, msg)
    })
 }
@@ -101,7 +101,7 @@ function insertDataToExcel(accessToken, fileId, callback) {
 function getSharingLink(accessToken, id, callback) {
   request
     .post('https://graph.microsoft.com/v1.0/me/drive/items/' + id + '/createLink')
-    .send({ type: 'view' })
+    .send({ type: 'edit' , scope: 'anonymous'})
     .set('Authorization', 'Bearer ' + accessToken)
     .set('Content-Type', 'application/json')
     .end((err, res) => {
